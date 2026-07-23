@@ -25,24 +25,21 @@ function clearConsole() {
     y: -5,
     duration: 0.2,
     onComplete: () => {
-      consoleOutput.innerHTML = '<div class="text-slate-600">// Console cleared.</div>';
+      consoleOutput.innerHTML = '<div class="text-slate-600">// Output cleared.</div>';
     }
   });
 }
 
-// Light / Dark Mode Toggle Function
 let isDarkMode = true;
 
 function toggleTheme() {
   isDarkMode = !isDarkMode;
   document.body.classList.toggle("light-mode", !isDarkMode);
 
-  // Toggle Monaco Theme
   if (typeof monaco !== 'undefined' && monaco.editor) {
     monaco.editor.setTheme(isDarkMode ? 'vs-dark' : 'vs');
   }
 
-  // Update Icon
   const themeIcon = document.getElementById("theme-icon");
   if (themeIcon) {
     themeIcon.setAttribute("data-lucide", isDarkMode ? "sun" : "moon");
