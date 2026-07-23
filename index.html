@@ -72,10 +72,19 @@
 
           <!-- Language Selector Dropdown -->
           <select id="language-select" onchange="changeLanguage(this.value)" class="bg-slate-950 text-slate-300 text-xs font-mono px-2.5 py-1 rounded-md border border-slate-800 focus:outline-none focus:border-blue-500 transition">
-            <option value="python">Python 3.11 (Pyodide WASM)</option>
-            <option value="javascript">JavaScript (ES6 Runtime)</option>
-            <option value="html">HTML5 / CSS (Live Preview)</option>
-          </select>
+            <optgroup label="Client-Side (WASM/Browser)">
+                <option value="python">Python 3.11 (Pyodide WASM)</option>
+                <option value="javascript">JavaScript (ES6)</option>
+                <option value="html">HTML5 / CSS Live Preview</option>
+            </optgroup>
+            <optgroup label="Cloud Compiled Languages">
+                <option value="c">C (GCC)</option>
+                <option value="cpp">C++ (GCC)</option>
+                <option value="java">Java (OpenJDK)</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go (Golang)</option>
+            </optgroup>
+        </select>
         </div>
 
         <button onclick="resetEditorCode()" class="text-slate-400 hover:text-white p-1.5 rounded-md hover:bg-slate-800 transition-all text-xs flex items-center gap-1">
