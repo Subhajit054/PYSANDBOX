@@ -7,13 +7,11 @@
   --text-main: #f8fafc;
 }
 
-/* Light Mode Overrides */
 body.light-mode {
   --bg-gradient: radial-gradient(circle at 50% -20%, #e0e7ff 0%, #f1f5f9 45%, #e2e8f0 100%);
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(0, 0, 0, 0.08);
   --text-main: #0f172a;
-  color: var(--text-main);
 }
 
 html, body {
@@ -32,7 +30,6 @@ html, body {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Glassmorphism Panel */
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
@@ -41,7 +38,6 @@ html, body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
-/* Background Glow Orb */
 .glow-orb {
   position: absolute;
   width: 500px;
@@ -53,7 +49,6 @@ html, body {
   z-index: 0;
 }
 
-/* Action Button Glow */
 .btn-glow {
   background: linear-gradient(135deg, #2563eb, #0d9488);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -71,7 +66,6 @@ html, body {
   filter: grayscale(0.8);
 }
 
-/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
 }
