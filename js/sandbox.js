@@ -2,7 +2,7 @@ let pyodide = null;
 let editor = null;
 let currentLanguage = 'python';
 
-// Judge0 Language ID Mapping
+// Judge0 Language IDs
 const JUDGE0_LANG_IDS = {
   c: 50,      // C (GCC 9.2.0)
   cpp: 54,    // C++ (GCC 9.2.0)
@@ -12,17 +12,24 @@ const JUDGE0_LANG_IDS = {
 };
 
 const TEMPLATES = {
-  python: `# Python 3.11 (Pyodide WASM)\nprint("Hello from Python WASM!")`,
-  javascript: `// JavaScript (Browser Context)\nconsole.log("Hello from JavaScript!");`,
-  html: `<!-- Live HTML Preview -->\n<h1 style="color: #10b981;">Hello from HTML Preview!</h1>`,
+  python: `# Python 3.11 (Pyodide WASM)\nimport math\n\ndef demo():\n    print("Hello from Python WASM!")\n    print("Square root of 16:", math.sqrt(16))\n\ndemo()`,
+  
+  javascript: `// JavaScript (Browser Runtime)\nconsole.log("Hello from JavaScript!");\n\nconst nums = [1, 2, 3, 4];\nconsole.log("Doubled:", nums.map(n => n * 2));`,
+  
+  html: `<!-- Live HTML Preview -->\n<div style="font-family: sans-serif; text-align: center; padding: 30px; color: #10b981; background: #0f172a; border-radius: 10px;">\n  <h2>Live HTML Output</h2>\n  <button onclick="alert('Working!')" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Test Click</button>\n</div>`,
+  
   c: `// C Language\n#include <stdio.h>\n\nint main() {\n    printf("Hello from C Sandbox!\\n");\n    return 0;\n}`,
+  
   cpp: `// C++ Language\n#include <iostream>\n\nint main() {\n    std::cout << "Hello from C++ Sandbox!" << std::endl;\n    return 0;\n}`,
+  
   java: `// Java Language\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from Java Sandbox!");\n    }\n}`,
+  
   rust: `// Rust Language\nfn main() {\n    println!("Hello from Rust Sandbox!");\n}`,
+  
   go: `// Go Language\npackage main\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello from Go Sandbox!")\n}`
 };
 
-// 1. Initialize Monaco Editor
+// Initialize Monaco Editor
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
 
 require(['vs/editor/editor.main'], function () {
@@ -41,7 +48,7 @@ require(['vs/editor/editor.main'], function () {
   });
 });
 
-// 2. Initialize Pyodide WASM
+// Initialize Pyodide WASM Engine
 async function initPyodideSandbox() {
   const statusDot = document.getElementById("status-dot");
   const engineStatus = document.getElementById("engine-status");
@@ -63,7 +70,7 @@ async function initPyodideSandbox() {
 
   } catch (error) {
     statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
-    engineStatus.textContent = "API Mode Ready";
+    engineStatus.textContent = "API Mode Active";
     engineStatus.className = "text-amber-400 font-medium";
     
     runBtn.disabled = false;
@@ -72,14 +79,14 @@ async function initPyodideSandbox() {
   }
 }
 
-// 3. Handle Language Selection
+// Handle Language Switching
 function changeLanguage(lang) {
   currentLanguage = lang;
   if (!editor) return;
 
   const telemetryEngine = document.getElementById("telemetry-engine");
 
-  const monacoLangMap = {
+  const monacoLanguageMap = {
     python: 'python',
     javascript: 'javascript',
     html: 'html',
@@ -90,15 +97,22 @@ function changeLanguage(lang) {
     go: 'go'
   };
 
-  monaco.editor.setModelLanguage(editor.getModel(), monacoLangMap[lang] || 'plaintext');
-  editor.setValue(TEMPLATES[lang] || '');
+  monaco.editor.setModelLanguage(editor.getModel(), monacoLanguageMap[lang] || 'plaintext');
+
+  if (TEMPLATES[lang]) {
+    editor.setValue(TEMPLATES[lang]);
+  }
 
   if (telemetryEngine) {
-    telemetryEngine.textContent = ['python', 'javascript', 'html'].includes(lang) ? "browser-wasm/dom" : "judge0-cloud-api";
+    if (['python', 'javascript', 'html'].includes(lang)) {
+      telemetryEngine.textContent = "browser-wasm/dom";
+    } else {
+      telemetryEngine.textContent = "judge0-cloud-api";
+    }
   }
 }
 
-// 4. Unified Execution Engine
+// Execute Code
 async function executeSandboxCode() {
   if (!editor) return;
 
@@ -109,17 +123,14 @@ async function executeSandboxCode() {
   consoleOutput.innerHTML = "";
   const startTime = performance.now();
 
-  // A. Local Python Execution
   if (currentLanguage === 'python') {
     if (!pyodide) {
-      consoleOutput.innerHTML = `<div class="text-rose-400 font-mono text-xs">[Error]: Pyodide engine not ready.</div>`;
+      appendLog("[Error]: Pyodide WASM engine is not ready.", "text-rose-400");
       return;
     }
     try {
       pyodide.setStdout({
-        batched: (text) => {
-          appendLog(text, "text-emerald-400");
-        }
+        batched: (text) => appendLog(text, "text-emerald-400")
       });
       await pyodide.runPythonAsync(code);
       executionTime.textContent = `Latency: ${(performance.now() - startTime).toFixed(2)}ms`;
@@ -127,7 +138,6 @@ async function executeSandboxCode() {
       appendLog(`[Python Error]: ${err.message}`, "text-rose-400");
     }
   } 
-  // B. Local JavaScript Execution
   else if (currentLanguage === 'javascript') {
     try {
       const customConsole = {
@@ -140,7 +150,6 @@ async function executeSandboxCode() {
       appendLog(`[JS Error]: ${err.message}`, "text-rose-400");
     }
   } 
-  // C. Local HTML Live Preview
   else if (currentLanguage === 'html') {
     const iframe = document.createElement("iframe");
     iframe.className = "w-full h-full border-0 rounded-lg bg-white";
@@ -148,26 +157,11 @@ async function executeSandboxCode() {
     consoleOutput.appendChild(iframe);
     executionTime.textContent = `Latency: ${(performance.now() - startTime).toFixed(2)}ms`;
   } 
-  // D. Cloud Execution via Judge0 API (C, C++, Java, Rust, Go)
   else {
-    appendLog(`[Cloud Compiler]: Sending ${currentLanguage.toUpperCase()} code to sandbox...`, "text-amber-400");
+    appendLog(`[Cloud Compiler]: Executing ${currentLanguage.toUpperCase()} code...`, "text-amber-400");
     
     try {
-      const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?wait=true", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-          "X-RapidAPI-Key": "ANONYMOUS" // Uses free open tier or public CORS endpoint
-        },
-        body: JSON.stringify({
-          language_id: JUDGE0_LANG_IDS[currentLanguage],
-          source_code: code
-        })
-      });
-
-      // Public fallback execution using CE endpoint
-      const fallbackRes = await fetch("https://ce.judge0.com/submissions?wait=true", {
+      const res = await fetch("https://ce.judge0.com/submissions?wait=true", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -176,9 +170,9 @@ async function executeSandboxCode() {
         })
       });
 
-      const data = await fallbackRes.json();
-
+      const data = await res.json();
       consoleOutput.innerHTML = "";
+
       if (data.stdout) appendLog(data.stdout, "text-emerald-400");
       if (data.stderr) appendLog(data.stderr, "text-rose-400");
       if (data.compile_output) appendLog(data.compile_output, "text-rose-400");
@@ -186,7 +180,7 @@ async function executeSandboxCode() {
       executionTime.textContent = `Latency: ${(performance.now() - startTime).toFixed(2)}ms`;
 
     } catch (err) {
-      appendLog(`[API Error]: Could not reach cloud compiler. ${err.message}`, "text-rose-400");
+      appendLog(`[API Error]: Cloud execution failed. ${err.message}`, "text-rose-400");
     }
   }
 }
